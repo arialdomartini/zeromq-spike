@@ -32,13 +32,59 @@ namespace ZeroMQSpike
             publisher.Publish("subscription-A", "message A2");
             publisher.Publish("subscription-B", "message B2");
             publisher.Publish("subscription-C", "message C2");
-
+            publisher.Dispose();
 
 
             subscriber.Received.Should().BeEquivalentTo(new List<string>
             {
                 "subscription-C message C1",
                 "subscription-C message C2"
+            });
+        }
+
+        [Fact]
+        public void publisher_can_die_and_get_back_to_life()
+        {
+            const string port = "5556";
+            var endpoint = $"tcp://*:{port}";
+
+
+            var subscriber = new Subscriber($"tcp://127.0.0.1:{port}", "subscription-C");
+            Task.Run(() => subscriber.Receive(4));
+
+            {
+                var publisher = new Publisher(endpoint);
+                Thread.Sleep(500);
+
+                publisher.Publish("subscription-A", "message A1");
+                publisher.Publish("subscription-B", "message B1");
+                publisher.Publish("subscription-C", "message C1");
+                publisher.Publish("subscription-A", "message A2");
+                publisher.Publish("subscription-B", "message B2");
+                publisher.Publish("subscription-C", "message C2");
+
+                publisher.Dispose();
+            }
+            {
+                var publisher = new Publisher(endpoint);
+                Thread.Sleep(500);
+
+                publisher.Publish("subscription-A", "message A3");
+                publisher.Publish("subscription-B", "message B3");
+                publisher.Publish("subscription-C", "message C3");
+                publisher.Publish("subscription-A", "message A4");
+                publisher.Publish("subscription-B", "message B4");
+                publisher.Publish("subscription-C", "message C4");
+                publisher.Dispose();
+            }
+
+
+            subscriber.Received.Should().BeEquivalentTo(new List<string>
+            {
+                "subscription-C message C1",
+                "subscription-C message C2",
+                "subscription-C message C3",
+                "subscription-C message C4"
             });
         }
     }
