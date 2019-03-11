@@ -6,12 +6,12 @@ using ZeroMQ;
 
 namespace ZeroMQSpike
 {
-    public class Spike
+    public class RequestResponseTest
     {
         [Fact]
         public void should_receive_messages()
         {
-            const int numberOfMessages = 10_000;
+            const int numberOfMessages = 100;
             const int numberOfClients = 5;
 
             const string port = "5555";
@@ -19,7 +19,7 @@ namespace ZeroMQSpike
 
             var server = new Server(endpoint);
 
-            Task.Run(() => server.Listen(numberOfMessages * numberOfClients));
+            var task = Task.Run(() => server.Listen(numberOfMessages * numberOfClients));
 
             Enumerable.Range(0, numberOfClients).ToList().AsParallel().ForAll(i =>
             {
